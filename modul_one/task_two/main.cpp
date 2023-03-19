@@ -11,18 +11,6 @@ A[0..n-1] и B[0..m-1]. n >> m. Найдите их пересечение.
 #include <iostream>
 #include <cassert>
 
-void arrayFiling(int array[], int size) {  // ввод данных в массив
-    for (int i = 0; i < size; i++) {
-        std::cin >> array[i];
-    }
-}
-
-void coutArray(const int array[], int size) {  // вывод данных в консоль
-    for (int i = 0; i < size; i++) {
-        std::cout << array[i] << " ";
-    }
-}
-
 int min(int num1, int num2) {
     if (num1 > num2) {
         return num2;
@@ -79,11 +67,21 @@ int main() {
 
     int A[sizeA];
     int B[sizeB];
-    arrayFiling(A, sizeA);
-    arrayFiling(B, sizeB);
+    // ввод данных
+    for (int i = 0; i < sizeA; i++) {
+        std::cin >> A[i];
+    }
+
+    for (int i = 0; i < sizeB; i++) {
+        std::cin >> B[i];
+    }
 
     int sect[sizeB];
     int k = intersectionArrays(A, sizeA, B, sizeB, sect);
-    coutArray(sect, k);
+
+    // вывод данных в консоль
+    for (int i = 0; i < k; i++) {
+        std::cout << sect[i] << " ";
+    }
     return 0;
 }
