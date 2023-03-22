@@ -74,7 +74,6 @@ T Queue<T>::popFront() {
     return value;
 }
 
-// дописать!!
 template<class T>
 void Queue<T>::grow() {
     int newBufferSize = bufferSize * 2;

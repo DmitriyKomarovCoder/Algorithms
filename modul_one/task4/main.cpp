@@ -13,19 +13,57 @@
 Требуется посчитать кол-во переключений процессора.
 
 */
-template <class T, class Compare>
+#include <iostream>
+
+struct Process {
+    int P;
+    int t;
+    int T;
+    Process() : P(0), t(0), T(0) {}
+    Process(int P, int t, int T) : P(P), t(t), T(T) {}
+};
+
+template<class T>
+class DefualtComparator {
+ public:
+    bool operator()(const T& value1, const T& value2) {return value1 < value2;}
+};
+
+template <class T, class Compare = DefualtComparator<T>>
 class Heap {
  public:
-    Heap(Compare cmp);
-    Heap(T* arr, int size, Compare cmp);
+    explicit Heap(Compare cmp = Compare) :
+    cmp(cmp),
+    buffer(nullptr),
+    bufferSize(0)
+    size(0) {}
+
+    Heap(const T* arr, size_t size, Compare cmp);
+
+    ~Heap();
 
     void Add(cont T&);
-    T ExtractMax();
-    const T& Peek() const;
-    size_t Size() const;
+    const T& ExtractMin();
+    const T& Peek() const {return buffer[0];}
+    size_t Size() const {return size;}
+
  private:
+    void BuildHeap();
+    void Hepify();
+    void SiftUp();
+    void SiftDown();
+
+    // расширение buffer
+    void grow();
+
     Compare cmp;
     T* buffer;
     size_t bufferSize;
     size_t size;
 };
+
+
+
+int main() {
+    return 0;
+}
