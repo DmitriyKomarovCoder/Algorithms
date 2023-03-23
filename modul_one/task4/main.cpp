@@ -39,7 +39,6 @@ class Heap {
     size(0) {}
 
     Heap(const T* arr, size_t size, Compare cmp);
-
     ~Heap();
 
     void Add(cont T&);
@@ -49,9 +48,8 @@ class Heap {
 
  private:
     void BuildHeap();
-    void Hepify();
-    void SiftUp();
-    void SiftDown();
+    void SiftUp(int i);
+    void SiftDown(int i);
 
     // расширение buffer
     void grow();
@@ -62,6 +60,27 @@ class Heap {
     size_t size;
 };
 
+template <class T, class Compare>
+Heap<T, Compare>::Heap(const T* arr, size_t size, Compare cmp) :
+    cmp(cmp),
+    size(size),
+    bufferSize(size),
+    bufferSize(size) {
+        arr = new T[bufferSize];
+        BuildHeap(arr);
+}
+
+template <class T, class Compare>
+Heap<T, Compare>::~Heap() {
+    delete[] buffer;
+}
+
+template <class T, class Compare>
+void Heap<T, Compare>::BuildHeap() {
+    for (int i = size / 2 - 1; i >= 0; --i) {
+        siftDown(i);
+    }
+}
 
 
 int main() {
