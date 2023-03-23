@@ -14,6 +14,7 @@
 
 */
 #include <iostream>
+#include <assert.h>
 
 struct Process {
     int P;
@@ -24,50 +25,59 @@ struct Process {
 };
 
 template<class T>
-class DefualtComparator {
+class IsProcessFirst {
+ public:
+    bool operator()(const Process& value1, const Process& value2) {
+        return value1.P * (value1.t + 1) < value2.P * (value2.t + 1);
+    }
+};
+
+template<class T>
+class DefaultComparator {
  public:
     bool operator()(const T& value1, const T& value2) {return value1 < value2;}
 };
 
-template <class T, class Compare = DefualtComparator<T>>
+template <class T, class Compare = DefaultComparator<T>>
 class Heap {
  public:
-    explicit Heap(Compare cmp = Compare) :
+    explicit Heap(Compare cmp = DefaultComparator<T>()) :
     cmp(cmp),
-    buffer(nullptr),
-    bufferSize(0)
-    size(0) {}
+    bufferSize(2),
+    size_(0) {buffer = new T[bufferSize];}
 
-    Heap(const T* arr, size_t size, Compare cmp);
+    Heap(const T* arr, size_t size, Compare cmp = DefaultComparator<T>());
     ~Heap();
 
-    void Add(cont T&);
+    void Add(const T & element);
     const T& ExtractMin();
     const T& Peek() const {return buffer[0];}
-    size_t Size() const {return size;}
+    size_t Size() const {return size_;}
 
  private:
+    void SiftUp(int index);
+    void SiftDown(int index);
     void BuildHeap();
-    void SiftUp(int i);
-    void SiftDown(int i);
-
     // расширение buffer
     void grow();
 
     Compare cmp;
     T* buffer;
     size_t bufferSize;
-    size_t size;
+    size_t size_;
 };
 
 template <class T, class Compare>
 Heap<T, Compare>::Heap(const T* arr, size_t size, Compare cmp) :
     cmp(cmp),
-    size(size),
-    bufferSize(size),
+    size_(size),
     bufferSize(size) {
-        arr = new T[bufferSize];
-        BuildHeap(arr);
+        assert(size > 0);
+        buffer = new T[bufferSize];
+        for (int i = 0; i < size; i++) {
+            buffer[i] = arr[i];
+        }
+        BuildHeap(buffer);
 }
 
 template <class T, class Compare>
@@ -76,13 +86,77 @@ Heap<T, Compare>::~Heap() {
 }
 
 template <class T, class Compare>
-void Heap<T, Compare>::BuildHeap() {
-    for (int i = size / 2 - 1; i >= 0; --i) {
-        siftDown(i);
+void Heap<T, Compare>::SiftUp(int index) {
+    while (index > 0) {
+        int parent = (index - 1) / 2;
+        if (cmp(buffer[parent], buffer[index]))
+            return;
+        std::swap(buffer[index], buffer[parent]);
+        index = parent;
     }
 }
 
+template <class T, class Compare>
+void Heap<T, Compare>::SiftDown(int index) {
+    int left = 2 * index + 1;
+    int right = 2 * index + 2;
 
+    int smaller = index;
+    if (left < size_ && cmp(buffer[left], buffer[index]))
+        smaller = left;
+    if (right < size_ && cmp(buffer[right], buffer[smaller]))
+        smaller = right;
+    if (smaller != index) {
+        std::swap(buffer[index], buffer[smaller]);
+        SiftDown(smaller);
+    }
+}
+
+template <class T, class Compare>
+void Heap<T, Compare>::BuildHeap() {
+    for (size_t i = size_ / 2 - 1; i >= 0; --i) {
+        SiftDown(i);
+    }
+}
+
+template <class T, class Compare>
+void Heap<T, Compare>::Add(const T& element) {
+    if (size_ == bufferSize) {
+        grow();
+    }
+    assert(size_ < bufferSize && buffer != 0);
+    size_++;
+    buffer[size_] = element;
+    SiftUp(size_);
+}
+
+template <class T, class Compare>
+void Heap<T, Compare>::grow() {
+    size_t newBufferSize = bufferSize * 2;
+    T* newBuffer = new T[newBufferSize];
+    for (int i = 0; i < size_; i++) {
+        newBuffer[i] = buffer[i];
+    }
+
+    delete[] buffer;
+    buffer = newBuffer;
+    bufferSize = newBufferSize;
+}
+
+template <class T, class Compare>
+const T& Heap<T, Compare>::ExtractMin() {
+    assert(bufferSize != 0);
+    int result = buffer[0];
+
+    buffer[0] = buffer[size_];
+    size_--;
+
+    if (size_ > 0) {
+        SiftDown(0);
+    }
+    return result;
+}
 int main() {
+    
     return 0;
 }
