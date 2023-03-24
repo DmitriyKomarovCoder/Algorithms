@@ -24,7 +24,6 @@ struct Process {
     Process(int P, int t, int T) : P(P), t(t), T(T) {}
 };
 
-template<class T>
 class IsProcessFirst {
  public:
     bool operator()(const Process& value1, const Process& value2) {
@@ -43,16 +42,19 @@ class Heap {
  public:
     explicit Heap(Compare cmp = DefaultComparator<T>()) :
     cmp(cmp),
-    bufferSize(2),
+    bufferSize(1),
     size_(0) {buffer = new T[bufferSize];}
 
-    Heap(const T* arr, size_t size, Compare cmp = DefaultComparator<T>());
+    Heap(const T* arr, int size, Compare cmp = DefaultComparator<T>());
     ~Heap();
+
+    Heap(Heap&) = delete;
+    Heap& operator=(const Heap&) = delete;
 
     void Add(const T & element);
     const T& ExtractMin();
     const T& Peek() const {return buffer[0];}
-    size_t Size() const {return size_;}
+    int Size() const {return size_;}
 
  private:
     void SiftUp(int index);
@@ -63,12 +65,12 @@ class Heap {
 
     Compare cmp;
     T* buffer;
-    size_t bufferSize;
-    size_t size_;
+    int bufferSize;
+    int size_;
 };
 
 template <class T, class Compare>
-Heap<T, Compare>::Heap(const T* arr, size_t size, Compare cmp) :
+Heap<T, Compare>::Heap(const T* arr, int size, Compare cmp) :
     cmp(cmp),
     size_(size),
     bufferSize(size) {
@@ -77,7 +79,7 @@ Heap<T, Compare>::Heap(const T* arr, size_t size, Compare cmp) :
         for (int i = 0; i < size; i++) {
             buffer[i] = arr[i];
         }
-        BuildHeap(buffer);
+        BuildHeap();
 }
 
 template <class T, class Compare>
@@ -114,7 +116,7 @@ void Heap<T, Compare>::SiftDown(int index) {
 
 template <class T, class Compare>
 void Heap<T, Compare>::BuildHeap() {
-    for (size_t i = size_ / 2 - 1; i >= 0; --i) {
+    for (int i = size_ / 2 - 1; i >= 0; --i) {
         SiftDown(i);
     }
 }
@@ -125,14 +127,15 @@ void Heap<T, Compare>::Add(const T& element) {
         grow();
     }
     assert(size_ < bufferSize && buffer != 0);
-    size_++;
     buffer[size_] = element;
     SiftUp(size_);
+    size_++;
+
 }
 
 template <class T, class Compare>
 void Heap<T, Compare>::grow() {
-    size_t newBufferSize = bufferSize * 2;
+    int newBufferSize = bufferSize * 2;
     T* newBuffer = new T[newBufferSize];
     for (int i = 0; i < size_; i++) {
         newBuffer[i] = buffer[i];
@@ -145,10 +148,10 @@ void Heap<T, Compare>::grow() {
 
 template <class T, class Compare>
 const T& Heap<T, Compare>::ExtractMin() {
-    assert(bufferSize != 0);
-    int result = buffer[0];
+    assert(size_ > 0);
+    T& result = buffer[0];
 
-    buffer[0] = buffer[size_];
+    buffer[0] = buffer[size_- 1];
     size_--;
 
     if (size_ > 0) {
@@ -156,7 +159,37 @@ const T& Heap<T, Compare>::ExtractMin() {
     }
     return result;
 }
+
+template <class T, class Compare>
+int SwitchingProcess(Heap<T, Compare>& heap) {
+    Process process;
+    int k = 0;
+    while (heap.Size() > 0) {
+        process = heap.ExtractMin();
+        std::cout << process.P << " " << process.t << " " << process.T << " " << heap.Size() <<std::endl;
+        process.t += process.P;
+        if (process.t < process.T) {
+            heap.Add(process);
+        }
+        k++;
+    }
+    return k;
+}
 int main() {
-    
+    int n;
+    std::cin >> n;
+    IsProcessFirst cmp;
+    Heap<Process, IsProcessFirst> heap(cmp);
+
+    int P, T;
+    Process process;
+    for (int i = 0; i < n; i++) {
+        std::cin >> P >> T;
+        process.P = P;
+        process.T = T;
+        heap.Add(process);
+    }
+    std::cout << SwitchingProcess(heap);
+
     return 0;
 }
