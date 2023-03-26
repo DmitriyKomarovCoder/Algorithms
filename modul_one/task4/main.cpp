@@ -26,7 +26,7 @@ struct Process {
 
 class IsProcessFirst {
  public:
-    bool operator()(const Process& value1, const Process& value2) {
+    bool operator()(const Process& value1, const Process& value2) const {
         return value1.P * (value1.t + 1) < value2.P * (value2.t + 1);
     }
 };
@@ -164,17 +164,20 @@ template <class T, class Compare>
 int SwitchingProcess(Heap<T, Compare>& heap) {
     Process process;
     int k = 0;
+    int p = 0;
     while (heap.Size() > 0) {
         process = heap.ExtractMin();
-        std::cout << process.P << " " << process.t << " " << process.T << " " << heap.Size() <<std::endl;
-        process.t += process.P;
-        if (process.t < process.T) {
+        p++;
+        k = process.t += process.P;
+        if (k <= process.T) {
+            process.t = k;
             heap.Add(process);
         }
-        k++;
     }
-    return k;
+    return p;
 }
+
+
 int main() {
     int n;
     std::cin >> n;
@@ -193,3 +196,4 @@ int main() {
 
     return 0;
 }
+
