@@ -52,7 +52,7 @@ class Heap {
     Heap& operator=(const Heap&) = delete;
 
     void Add(const T & element);
-    const T& ExtractMin();
+    const T ExtractMin();
     const T& Peek() const {return buffer[0];}
     int Size() const {return size_;}
 
@@ -60,6 +60,7 @@ class Heap {
     void SiftUp(int index);
     void SiftDown(int index);
     void BuildHeap();
+    
     // расширение buffer
     void grow();
 
@@ -130,7 +131,6 @@ void Heap<T, Compare>::Add(const T& element) {
     buffer[size_] = element;
     SiftUp(size_);
     size_++;
-
 }
 
 template <class T, class Compare>
@@ -147,9 +147,9 @@ void Heap<T, Compare>::grow() {
 }
 
 template <class T, class Compare>
-const T& Heap<T, Compare>::ExtractMin() {
+const T Heap<T, Compare>::ExtractMin() {
     assert(size_ > 0);
-    T& result = buffer[0];
+    T result = buffer[0];
 
     buffer[0] = buffer[size_- 1];
     size_--;
@@ -166,15 +166,17 @@ int SwitchingProcess(Heap<T, Compare>& heap) {
     int k = 0;
     while (heap.Size() > 0) {
         process = heap.ExtractMin();
-        std::cout << process.P << " " << process.t << " " << process.T << " " << heap.Size() <<std::endl;
-        process.t += process.P;
-        if (process.t < process.T) {
-            heap.Add(process);
+        if (process.t >= process.T) {
+            continue;
         }
+        process.t += process.P;
+        heap.Add(process);
+
         k++;
     }
     return k;
 }
+
 int main() {
     int n;
     std::cin >> n;
