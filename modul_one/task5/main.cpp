@@ -156,6 +156,7 @@ int main() {
     for (int i = 0; i < size; i++) {
         std::cout << array[i].day << ' ' << array[i].month << ' ' << array[i].year << " " << array[i].isBorn << std::endl;
     }
+    
     std::cout<< CountingContemporaries(array, size);
     return 0;
 }
