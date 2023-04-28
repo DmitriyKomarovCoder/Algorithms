@@ -6,13 +6,13 @@
 
 #include <iostream>
 
-int Partition(long long int* arr, int first, int last, int highestBit) {
-    int i = first;
-    int j = last;
+int Partition(long long int* arr, int l, int r, int highestBit) {
+    int i = l;
+    int j = r;
 
     while (i <= j) {
-        for (; i <= last && !((arr[i] >> highestBit) & 1); ++i) {}
-        for (; j >= first && ((arr[j] >> highestBit) & 1); --j) {}
+        for (; i <= r && !((arr[i] >> highestBit) & 1); ++i) {}
+        for (; j >= l && ((arr[j] >> highestBit) & 1); --j) {}
         if (i < j) {
             std::swap(arr[i++], arr[j--]);
         }
@@ -20,14 +20,14 @@ int Partition(long long int* arr, int first, int last, int highestBit) {
     return i;
 }
 
-void BinaryQuickSort(long long int* arr, int first, int last, int highestBit) {
-    if (first >= last) {
+void BinaryQuickSort(long long int* arr, int l, int r, int highestBit) {
+    if (l >= r) {
         return;
     }
 
-    int part = Partition(arr, first, last, highestBit);
-    BinaryQuickSort(arr, first, part - 1, highestBit - 1);
-    BinaryQuickSort(arr, part, last, highestBit - 1);
+    int part = Partition(arr, l, r, highestBit);
+    BinaryQuickSort(arr, l, part - 1, highestBit - 1);
+    BinaryQuickSort(arr, part, r, highestBit - 1);
 }
 
 
