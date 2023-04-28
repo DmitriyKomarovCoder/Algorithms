@@ -1,3 +1,4 @@
+
 /* 
 Решение всех задач данного раздела предполагает использование кучи, реализованной в виде шаблонного класса. 
 Решение должно поддерживать передачу функции сравнения снаружи.
@@ -167,6 +168,7 @@ int SwitchingProcess(Heap<T, Compare>& heap) {
     int p = 0;
     while (heap.Size() > 0) {
         process = heap.ExtractMin();
+<<<<<<< HEAD
         if (process.t >= process.T) {
             continue;
         }
@@ -174,10 +176,22 @@ int SwitchingProcess(Heap<T, Compare>& heap) {
         heap.Add(process);
 
         k++;
+=======
+        p++;
+        k = process.t += process.P;
+        if (k <= process.T) {
+            process.t = k;
+            heap.Add(process);
+        }
+>>>>>>> 307c1d7333d53ba460059980c1841393def724d6
     }
     return p;
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 307c1d7333d53ba460059980c1841393def724d6
 int main() {
     int n;
     std::cin >> n;
