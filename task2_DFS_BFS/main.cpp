@@ -10,7 +10,10 @@
 */
 
 #include <iostream>
+
 #include <stack>
+#include <queue>
+#include <vector>
 
 #include <string>
 #include <sstream>
@@ -26,7 +29,6 @@ class BinaryTree {
     bool Has(const T& key) const;
 
     void DfsInOrder(void (*visit)(const T& key)) const;
-
  private:
     struct Node  {
         Node* Left;
@@ -34,6 +36,8 @@ class BinaryTree {
         T Key;
         Node(const T& key) : Left(nullptr), Right(nullptr), Key(key) {}
     };
+
+    void BfsPastOrder(void(*visit)(Node& node));
     Node* root;
     Compare cmp;
 };
@@ -48,6 +52,7 @@ void BinaryTree<T, Compare>::deleteNode() {
     if (root == nullptr) {
         return;
     }
+    BfsPastOrder([](Node& node) {delete &node;});
     
 }
 
@@ -107,6 +112,33 @@ void BinaryTree<T, Compare>::DfsInOrder(void(*visit)(const T& key)) const {
         nodeStack.pop();
         visit(node->Key);
         node = node->Right;
+    }
+}
+
+template<class T, class Compare>
+void BinaryTree<T,Compare>::BfsPastOrder(void(*visit)(Node& node)) {
+    
+    std::queue<Node*> nodeQueue;
+    std::vector<Node*> vectorBfs;
+    nodeQueue.push(root);
+
+    while (!nodeQueue.empty()) {
+        Node* node = nodeQueue.front();
+        nodeQueue.pop();
+        
+        vectorBfs.push_back(node);
+
+        if(node->Left != nullptr) {
+            nodeQueue.push(node->Left);
+        }
+
+        if(node->Right != nullptr) {
+            nodeQueue.push(node->Right);
+        }
+    }
+
+    for(Node* treeNode: vectorBfs) {
+        visit(*treeNode);
     }
 }
 

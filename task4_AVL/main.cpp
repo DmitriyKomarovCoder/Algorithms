@@ -9,14 +9,14 @@ struct DefaultComparator {
     }
 };
 
-template <class Key, class Value, class Comparator = DefaultComparator<Key> >
+template <class Key, class Value, class Comparator = DefaultComparator<Key>>
 class AVLTree {
     struct Node {
         Key key;
         Value value;
 
         uint8_t height;
-        int count = 1;
+        int count;
 
         Node* left;
         Node* right;
@@ -25,6 +25,7 @@ class AVLTree {
             key(key),
             value(value),
             height(1),
+            count(1),
             left(nullptr),
             right(nullptr) {}
 
@@ -40,10 +41,10 @@ class AVLTree {
                      tree_size(0),
                      comp(comp) {}
 
-    AVLTree( const AVLTree& ) = delete;
-    AVLTree( AVLTree&& ) = delete;
-    AVLTree& operator =( const AVLTree& ) = delete;
-    AVLTree& operator =( AVLTree&& ) = delete;
+    AVLTree(const AVLTree&) = delete;
+    AVLTree(AVLTree&&) = delete;
+    AVLTree& operator =(const AVLTree&) = delete;
+    AVLTree& operator =(AVLTree&&) = delete;
 
     ~AVLTree() {
         delete root;
@@ -51,7 +52,8 @@ class AVLTree {
 
     Value* find(const Key& key) {
         return _find(root, key);
-    }
+    } 
+
     const Value* find(const Key& key) const {
         return find(key);
     }
@@ -63,11 +65,28 @@ class AVLTree {
     void erase(const Key& key) {
         root = _erase(root, key);
     }
-    int kStat(int k) {
-        return k;
+    int kStat(int pos) {
+        return _kStat(root, pos);
     }
 
  private:
+    Value* _kStat(Node* node, int pos) {
+        if(!node) {
+            return nullptr;
+        }
+        int comp_res = comp(pos, node_count(node));
+        if (comp_res == -1) {
+            return _kStat(node->left, pos);
+        } else if (comp_res == 1) {
+            return _kStat(node->right, pos);
+        }
+        return node;
+    }
+    
+    int node_count(Node* node) {
+        return node->count;
+    }
+
     Value* _find(Node* node, const Key& key) {
         if (!node) {
             return nullptr;
@@ -181,7 +200,7 @@ class AVLTree {
     }
 
     Node* balance(Node* node) {
-        fix_height(node);
+        fixheight(node);
         int bf = bfactor(node);
 
         if (bf == 2) {
@@ -212,11 +231,12 @@ int main() {
     for (int i = 0; i < n; i++) {
         std::cin >> num >> k;
         if (num >= 0) {
-            tree.insert(num);
-            std::cout << tree.kStat(k);
+            tree.insert(num, num);
+            std::cout << tree.kStat(k) << std::endl;
         } else {
             tree.erase(num);
             tree.kStat(k);
+            std::cout << tree.kStat(k) << std::endl;
         }
     }
     return 0;
