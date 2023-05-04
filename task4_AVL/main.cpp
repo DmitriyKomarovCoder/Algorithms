@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <vector>
 template <class T>
 struct DefaultComparator {
     int operator()(const T& l, const T& r) const {
@@ -52,7 +52,7 @@ class AVLTree {
 
     Value* find(const Key& key) {
         return _find(root, key);
-    } 
+    }
 
     const Value* find(const Key& key) const {
         return find(key);
@@ -65,26 +65,38 @@ class AVLTree {
     void erase(const Key& key) {
         root = _erase(root, key);
     }
-    int kStat(int pos) {
-        return _kStat(root, pos);
+    Value kStat(const int pos) {
+        return _kStat(root, pos)->key;
     }
 
  private:
-    Value* _kStat(Node* node, int pos) {
-        if(!node) {
+    Node* _kStat(Node* node, const int pos) {
+        if (!node) {
             return nullptr;
         }
-        int comp_res = comp(pos, node_count(node));
+        int comp_res = comp(pos, node_count(node->left));
         if (comp_res == -1) {
             return _kStat(node->left, pos);
         } else if (comp_res == 1) {
-            return _kStat(node->right, pos);
+            return _kStat(node->right, pos- comp_res - 1 );  // ?
+        } else {
+            return node;
         }
-        return node;
     }
-    
+
     int node_count(Node* node) {
-        return node->count;
+        if (node != nullptr) {
+            return node->count;
+        } else {
+            return 0;
+        }
+    }
+
+    void node_fix_count(Node* node) {
+        int count_left = node_count(node->left);
+        int count_right = node_count(node->right);
+
+        node->count = count_left + count_right + 1;
     }
 
     Value* _find(Node* node, const Key& key) {
@@ -115,47 +127,43 @@ class AVLTree {
         return balance(node);
     }
 
-    Node* _erase(Node* node, const Key& key) {
-        if ( !node ) {
+    Node* _erase( Node* node, const Key& key )
+    {
+        if ( !node )
+        {
             return nullptr;
         }
-
+        
         int comp_res = comp(key, node->key);
-        if (comp_res == -1) {
+        if (comp_res == -1)
+        {
             node->left = _erase(node->left, key);
-        } else if (comp_res == 1) {
+        }
+        else if (comp_res == 1)
+        {
             node->right = _erase(node->right, key);
-        } else {
+        }
+        else
+        {
             Node* left = node->left;
             Node* right = node->right;
-
             delete node;
 
             if (!right) {
                 return left;
             }
 
-            Node* min_node = remove_min_node(right);
-            min_node->right = left;
-            min_node->left = right;
-
+            Node* min_node = find_min(right);
+            min_node->right = remove_min(right);
+            min_node->left = left;
+            
             return balance(min_node);
         }
-        return balance(node);
-    }
-
-    Node* remove_min_node(Node* node) {
-        if (!node->left) {
-            Node* right = node->right;
-            delete node;
-            return right;
-        }
-        node->left = remove_min_node(node->left);
-        return balance(node);
+        return balance( node );
     }
 
     Node* find_min(Node* node) {
-        if (!node->left) {
+        if ( !node->left ) {
             return node;
         }
         return find_min(node->left);
@@ -186,7 +194,9 @@ class AVLTree {
         q->right = p->left;
         p->left = q;
         fixheight(q);
+        node_fix_count(q);
         fixheight(p);
+        node_fix_count(p);
         return p;
     }
 
@@ -195,12 +205,15 @@ class AVLTree {
         p->left = q->right;
         q->right = p;
         fixheight(p);
+        node_fix_count(p);
         fixheight(q);
+        node_fix_count(q);
         return q;
     }
 
     Node* balance(Node* node) {
         fixheight(node);
+        node_fix_count(node);
         int bf = bfactor(node);
 
         if (bf == 2) {
@@ -234,7 +247,7 @@ int main() {
             tree.insert(num, num);
             std::cout << tree.kStat(k) << std::endl;
         } else {
-            tree.erase(num);
+            tree.erase(std::abs(num));
             tree.kStat(k);
             std::cout << tree.kStat(k) << std::endl;
         }
