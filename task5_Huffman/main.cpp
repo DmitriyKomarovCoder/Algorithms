@@ -1,6 +1,7 @@
 #include "Haffman.hpp"
 #include "Test.hpp"
 
+#include <iostream>
 /*
 Encode
 +1. Один раз проходимся по входным данным, считая частотности букв алфавита. Так как пройтись придется дважды, надо запомнить весь ввод. +
@@ -74,15 +75,16 @@ void Encode(IInputStream& original, IOutputStream& compressed) {
     }
 }
 
-// void Decode(IInputStream& compressed, IOutputStream& original) {
-//     byte size;
-//     compressed.Read(size);
-
-//     Haffman haffman;
-//     haffman.
-
-// }
-
 int main() {
+    std::vector<byte> vec_input = {'a', 'b', 'r', 'a', 'k', 'a', 'd', 'a', 'b', 'r', 'a'};
+    std::vector<byte> vec_output;
+    VectorInput vecIn(&vec_input);
+    VectorOutput vecOut(&vec_output);
+    Encode(vecIn, vecOut);
+    byte val;
+    while (vecOut.ReadTest(val)) {
+        std::cout << val;
+    }
+    std::cout << std::endl;
     return 0;
 }

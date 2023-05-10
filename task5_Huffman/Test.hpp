@@ -23,7 +23,13 @@ public:
     virtual void Write(byte value) {
         buf->push_back(value);
     }
-
+    virtual bool ReadTest(byte& value) {
+        size_t pos = 0;
+        if (pos >= buf->size())
+            return false;
+        value = (*buf)[pos++];
+        return true;
+    }
 
 private:
     std::vector<byte>* buf;

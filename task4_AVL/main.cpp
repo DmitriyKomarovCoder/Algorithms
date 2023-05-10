@@ -28,17 +28,11 @@ class AVLTree {
             count(1),
             left(nullptr),
             right(nullptr) {}
-
-        ~Node() {
-            delete left;
-            delete right;
-        }
     };
 
  public:
     explicit AVLTree(Comparator comp = Comparator()) :
                      root(nullptr),
-                     tree_size(0),
                      comp(comp) {}
 
     AVLTree(const AVLTree&) = delete;
@@ -47,7 +41,7 @@ class AVLTree {
     AVLTree& operator =(AVLTree&&) = delete;
 
     ~AVLTree() {
-        delete root;
+        removeAVL(root);
     }
 
     Value* find(const Key& key) {
@@ -66,19 +60,29 @@ class AVLTree {
         root = _erase(root, key);
     }
     Value kStat(const int pos) {
-        return _kStat(root, pos)->key;
+        return _kStat(root, pos)->value;
     }
 
  private:
+    void removeAVL(Node* node) {
+        if (!node) {
+            return;
+        }
+        removeAVL(node->left);
+        removeAVL(node->right);
+        
+        delete node;
+    }
+
     Node* _kStat(Node* node, const int pos) {
         if (!node) {
             return nullptr;
         }
-        int comp_res = comp(pos, node_count(node->left));
-        if (comp_res == -1) {
+        int node_left_count = node_count(node->left);
+        if (pos < node_left_count) {
             return _kStat(node->left, pos);
-        } else if (comp_res == 1) {
-            return _kStat(node->right, pos- comp_res - 1 );  // ?
+        } else if (pos > node_left_count) {
+            return _kStat(node->right, pos - node_left_count - 1);
         } else {
             return node;
         }
@@ -103,67 +107,79 @@ class AVLTree {
         if (!node) {
             return nullptr;
         }
+    
         int comp_res  = comp(key, node->key);
         if (comp_res == -1) {
             return _find(node->left, key);
         } else if (comp_res == 1) {
             return _find(node->right, key);
+        } else {
+            return node; 
         }
-        return node;
     }
 
     Node* _insert(Node* node, const Key& key, const Value& value) {
         if (!node) {
-            tree_size++;
             return new Node(key, value);
         }
 
         int comp_res  = comp(key, node->key);
         if (comp_res == -1) {
             node->left = _insert(node->left, key, value);
-        } else {
+        } else if (comp_res == 1) {
             node->right = _insert(node->right, key, value);
         }
         return balance(node);
     }
 
-    Node* _erase( Node* node, const Key& key )
-    {
-        if ( !node )
-        {
+    Node* _erase( Node* node, const Key& key ) {
+        if (!node) {
             return nullptr;
         }
-        
+
         int comp_res = comp(key, node->key);
-        if (comp_res == -1)
-        {
+        if (comp_res == -1) {
             node->left = _erase(node->left, key);
         }
-        else if (comp_res == 1)
-        {
+        else if (comp_res == 1) {
             node->right = _erase(node->right, key);
         }
-        else
-        {
-            Node* left = node->left;
-            Node* right = node->right;
+        else {
+            Node* node_left = node->left;
+            Node* node_right = node->right;
             delete node;
 
-            if (!right) {
-                return left;
+            if (!node_right) {
+                return node_left;
             }
 
-            Node* min_node = find_min(right);
-            min_node->right = remove_min(right);
-            min_node->left = left;
-            
-            return balance(min_node);
+            Node* node_min = node_right;
+            std::vector<Node*> node_stack;
+            node_stack.push_back(node_right);
+
+            while(node_min->left != nullptr) {
+                node_min = node_min->left;
+                node_stack.push_back(node_min);
+            }
+            node_stack.pop_back();
+
+            Node* balanced = node_min->right;
+            while(!node_stack.empty()) {
+                node_stack.back()->left = balanced;
+                balanced = balance(node_stack.back());
+                node_stack.pop_back();
+            }
+            node_min->right = balanced;
+
+            node_min->left = node_left;
+
+            return balance(node_min);
         }
         return balance( node );
     }
 
     Node* find_min(Node* node) {
-        if ( !node->left ) {
+        if (!node->left) {
             return node;
         }
         return find_min(node->left);
@@ -177,16 +193,17 @@ class AVLTree {
         return balance(node);
     }
 
-    uint8_t height(Node* node) const {
+    uint8_t node_height(Node* node) const {
+        
         return node ? node->height : 0;
     }
 
     void fixheight(Node* node) {
-        node->height = std::max(height(node->left), height(node->right)) + 1;
+        node->height = std::max(node_height(node->left), node_height(node->right)) + 1;
     }
 
     int bfactor(Node* node) const {
-        return height(node->right) - height(node->left);
+        return node_height(node->right) - node_height(node->left);
     }
 
     Node* rotateleft(Node* q) {
@@ -231,7 +248,6 @@ class AVLTree {
     }
 
     Node* root;
-    size_t tree_size;
     Comparator comp;
 };
 
@@ -248,10 +264,9 @@ int main() {
             std::cout << tree.kStat(k) << std::endl;
         } else {
             tree.erase(std::abs(num));
-            tree.kStat(k);
             std::cout << tree.kStat(k) << std::endl;
         }
-    }
+    }   
     return 0;
 }
 
