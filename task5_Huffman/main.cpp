@@ -2,6 +2,7 @@
 #include "Test.hpp"
 
 #include <iostream>
+#include <cassert>
 /*
 Encode
 +1. Один раз проходимся по входным данным, считая частотности букв алфавита. Так как пройтись придется дважды, надо запомнить весь ввод. +
@@ -54,6 +55,22 @@ void Encode(IInputStream& original, IOutputStream& compressed) {
         compressed.Write(date);
     }
 
+    // Записываем таблицу кодов
+    writer = BitWriter();
+    for (const auto& pair : fTable) {
+        byte symbol = pair.first;
+        int freq = pair.second;
+        std::vector<bool> code = haffman.getCode(symbol);
+        byte size = static_cast<byte>(code.size());
+
+        writer.WriteByte(symbol);
+        writer.WriteByte(size);
+
+        for (bool bit : code) {
+            writer.WriteBit(bit);
+        }
+    }
+
     // Записываем закодированные данные в compressed
     writer = BitWriter();
     for (byte symbol : buffer) {
@@ -62,7 +79,7 @@ void Encode(IInputStream& original, IOutputStream& compressed) {
 
     // Записываем кол-во бит в последнем байте
     size_t bitCount = writer.GetBitCount();
-    if (bitCount & 8 != 0) {
+    if ((bitCount & 8) != 0) {
         byte lastByteBitsCount = 8 - static_cast<byte>(bitCount & 8);
         writer.WriteByte(lastByteBitsCount);
     } else {
@@ -75,16 +92,55 @@ void Encode(IInputStream& original, IOutputStream& compressed) {
     }
 }
 
+void Decode(IInputStream& compressed, IOutputStream& original) {
+    byte alphabetSize;
+    compressed.Read(alphabetSize);
+    Haffman haffman;
+
+    // строим дерево Хаффмана
+    haffman.decodeTree(alphabetSize, compressed);
+    BitReader reader(compressed);
+
+    // Считываем таблицу кодов
+    std::unordered_map<byte, std::vector<bool>> codeTable;
+    for (int i = 0; i < alphabetSize; ++i) {
+        byte symbol, codeSize;
+        reader.read_bit(symbol);
+        reader.read_bit(codeSize);
+        std::vector<bool> code;
+        for (int j = 0; j < codeSize; ++j) {
+            byte bit;
+            reader.read_bit(bit);
+            code.push_back(bit != 0);
+        }
+        codeTable[symbol] = code;
+    }
+
+    // декодируем исходное сообщение
+    BitReader message(compressed);
+    haffman.decodeMessage(message, original);
+
+    // Пропускаем не значащие быты в последнем байте
+    if (message.read_bit(alphabetSize)) {
+        byte ignor;
+        compressed.Read(ignor);
+        message.SkipBits(ignor);
+    }
+}
+
 int main() {
     std::vector<byte> vec_input = {'a', 'b', 'r', 'a', 'k', 'a', 'd', 'a', 'b', 'r', 'a'};
     std::vector<byte> vec_output;
     VectorInput vecIn(&vec_input);
     VectorOutput vecOut(&vec_output);
     Encode(vecIn, vecOut);
-    byte val;
-    while (vecOut.ReadTest(val)) {
-        std::cout << val;
-    }
-    std::cout << std::endl;
+
+    std::vector<byte> vec_decoded;
+    VectorInput vecInDec(&vec_output);
+    VectorOutput vecOutDec(&vec_decoded);
+    Decode(vecInDec, vecOutDec);
+
+    assert(vec_input == vec_decoded);
+
     return 0;
 }

@@ -4,13 +4,13 @@
 #include <vector>
 #include <queue>
 #include <unordered_map>
+#include <stack>
 
 #include "Test.hpp"
 
 
 class Haffman {
  public:
-
     Haffman() : root(nullptr), table() {}
     ~Haffman() {
         deleteTree(root);
@@ -62,6 +62,54 @@ class Haffman {
         _buildTable(root, code);
     }
 
+    void decodeMessage(BitReader& message, IOutputStream& original) {
+        Node* current = root;
+        byte symbol;
+        while (message.read_bit(symbol)) {
+            if (symbol == 1) {
+                current = current->right;
+            } else {
+                current = current->left;
+            }
+
+            if (current->ch != 0) {
+                original.Write(current->ch);
+                current = root;
+            }
+        }
+    }
+
+    void decodeTree(byte alphabetSize, IInputStream& compressed) {
+        std::stack<Node*> treeStack;
+        for (int i = 0; i < alphabetSize; i++) {
+            byte symbol;
+            compressed.Read(symbol);
+            treeStack.push(new Node(symbol, nullptr, nullptr));
+        }
+
+        while (treeStack.size() > 1) {
+            byte bit;
+            if (!compressed.Read(bit)) {
+                byte symbol;
+                compressed.Read(symbol);
+                treeStack.push(new Node(symbol, nullptr, nullptr));
+            } else {
+                Node* right = treeStack.top();
+                treeStack.pop();
+                Node* left = treeStack.top();
+                treeStack.pop();
+                treeStack.push(new Node(0, left, right));
+            }
+        }
+
+        root = treeStack.top();
+    }
+
+    void encodeTable(BitWriter& writer) {
+        // написать реализацию для сохранения таблицы 
+    }
+
+
  private:
     struct Node {
         byte ch;
@@ -69,6 +117,7 @@ class Haffman {
         Node* left;
         Node* right;
         Node(char ch_, int freq_) : ch(ch_), freq(freq_) {}
+        Node(byte ch_, Node* left_, Node* right_) : ch(ch_), left(left_), right(right_) {}
     };
 
     struct comp {
@@ -118,13 +167,14 @@ class Haffman {
         }
         if (node->left == nullptr && node->right == nullptr) {
             writer.WriteBit(1);
-            writer.WriteBit(node->freq);
+            writer.WriteByte(node->freq);
         } else {
             writer.WriteBit(0);
             _Serialize(node->left, writer);
             _Serialize(node->right, writer);
         }
     }
+
 
     Node* root = nullptr;
     std::unordered_map<byte, std::vector<bool>> table;

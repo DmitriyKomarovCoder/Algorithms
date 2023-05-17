@@ -70,6 +70,18 @@ class BitReader {
         return true;
     }
 
+    void SkipBits(int count) {
+        pos += count;
+        if (pos >= 8) {
+            byte temp;
+            while (pos >= 8) {
+                pos -= 8;
+                in.Read(temp);
+            }
+            buf = temp;
+        }
+    }
+
  private:
     IInputStream& in;
     byte buf;
