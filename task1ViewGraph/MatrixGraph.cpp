@@ -1,22 +1,12 @@
 #include "MatrixGraph.hpp"
 
 MatrixGraph::MatrixGraph(int num) {
-    adjLists.resize(num);
-    for (int i = 0; i < adjLists.size(); i ++) {
-        for (int j = 0; j < num; j++) {
-            adjLists[i][j] = false;
-        }
-    }
+    adjLists.resize(num, std::vector<bool>(num, false));
 }
 
 MatrixGraph::MatrixGraph(const IGraph& graph) {
     int sizeGraph = graph.VerticesCount();
-    adjLists.resize(sizeGraph);
-    for (int i = 0; i < adjLists.size(); i ++) {
-        for (int j = 0; j < adjLists.size(); j++) {
-            adjLists[i][j] = false;
-        }
-    }
+    adjLists.resize(sizeGraph, std::vector<bool>(sizeGraph, false));
 
     for (int i = 0; i < sizeGraph; i++) {
         for (auto next : graph.GetNextVertices(i)) {
